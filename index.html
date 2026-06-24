@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>로샵 - 로블록스 개발을 더 쉽게</title>
     <style>
+        /* 기본 배경 스타일 */
         body {
             font-family: 'Arial', sans-serif;
             background-color: #1a1a1a;
@@ -31,27 +32,292 @@
             color: #cccccc;
             font-size: 1.1rem;
         }
+        
+        /* 메인 화면 버튼들 */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
         .btn {
             display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
+            padding: 12px 24px;
             background-color: #00a2ff;
             color: white;
             text-decoration: none;
             border-radius: 5px;
             font-weight: bold;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
         }
         .btn:hover {
             background-color: #0082cc;
         }
+        .btn.secondary {
+            background-color: #444444;
+        }
+        .btn.secondary:hover {
+            background-color: #555555;
+        }
+
+        /* 로그아웃 버튼 스타일 */
+        .btn.danger {
+            background-color: #ff4a4a;
+        }
+        .btn.danger:hover {
+            background-color: #cc3333;
+        }
+
+        /* 팝업창(모달) 전체 배경 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* 팝업창 본체 */
+        .modal-box {
+            background-color: #2e2e2e;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 360px;
+            text-align: left;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+            position: relative;
+        }
+        .modal-box h2 {
+            margin-top: 0;
+            color: #00a2ff;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        /* 입력창 스타일 */
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #bbbbbb;
+            font-size: 0.9rem;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            background-color: #1a1a1a;
+            border: 1px solid #444444;
+            border-radius: 5px;
+            color: white;
+            font-size: 1rem;
+        }
+        .input-group input:focus {
+            border-color: #00a2ff;
+            outline: none;
+        }
+
+        /* 팝업창 닫기 버튼 */
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #888888;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .close-btn:hover {
+            color: white;
+        }
+        
+        /* 제출 버튼 */
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #00a2ff;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .submit-btn:hover {
+            background-color: #0082cc;
+        }
+
+        /* 완료 알림창 (커스텀 알럿) */
+        .alert-box {
+            text-align: center;
+        }
+        .alert-icon {
+            font-size: 3rem;
+            color: #2ed573;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
+
     <div class="container">
         <h1>로샵 (Roshop)</h1>
-        <p>로블록스 개발을 더 쉽게 만들어주는 공간입니다.</p>
-        <p>현재 사이트 빌드 중입니다. 조금만 기다려 주세요!</p>
-        <a href="#" class="btn">커뮤니티 입장하기</a>
+        <p id="mainMessage">로블록스 개발을 더 쉽게 해주다 로블록스 샵.</p>
+        
+        <div id="beforeLogin" class="btn-group">
+            <button class="btn" onclick="openModal('loginModal')">로그인</button>
+            <button class="btn secondary" onclick="openModal('registerModal')">회원가입</button>
+        </div>
+
+        <div id="afterLogin" class="btn-group" style="display: none;">
+            <button class="btn danger" onclick="handleLogout()">로그아웃</button>
+        </div>
     </div>
+
+    <div id="loginModal" class="modal-overlay" onclick="closeModalOnOverlay(event, 'loginModal')">
+        <div class="modal-box">
+            <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
+            <h2>로그인</h2>
+            <form onsubmit="handleLoginSubmit(event)">
+                <div class="input-group">
+                    <label for="loginId">아이디</label>
+                    <input type="text" id="loginId" required placeholder="아이디를 입력하세요">
+                </div>
+                <div class="input-group">
+                    <label for="loginPw">비밀번호</label>
+                    <input type="password" id="loginPw" required placeholder="비밀번호를 입력하세요">
+                </div>
+                <button type="submit" class="submit-btn">로그인하기</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="registerModal" class="modal-overlay" onclick="closeModalOnOverlay(event, 'registerModal')">
+        <div class="modal-box">
+            <button class="close-btn" onclick="closeModal('registerModal')">&times;</button>
+            <h2>회원가입</h2>
+            <form onsubmit="handleRegisterSubmit(event)">
+                <div class="input-group">
+                    <label for="regId">아이디</label>
+                    <input type="text" id="regId" required placeholder="사용할 아이디 입력">
+                </div>
+                <div class="input-group">
+                    <label for="regEmail">이메일</label>
+                    <input type="email" id="regEmail" required placeholder="이메일 주소 입력">
+                </div>
+                <div class="input-group">
+                    <label for="regPw">비밀번호</label>
+                    <input type="password" id="regPw" required placeholder="비밀번호 입력">
+                </div>
+                <button type="submit" class="submit-btn">가입 완료</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="successModal" class="modal-overlay">
+        <div class="modal-box alert-box">
+            <div class="alert-icon">✓</div>
+            <h2 id="successTitle">완료</h2>
+            <p id="successMessage" style="color: #ffffff; margin-bottom: 20px;">성공적으로 처리되었습니다.</p>
+            <button class="btn" onclick="closeModal('successModal')" style="width: 100%;">확인</button>
+        </div>
+    </div>
+
+    <script>
+        // 임시 회원 데이터 저장 배열 (새로고침하면 초기화됨)
+        let users = [];
+
+        // 팝업 열기
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        // 팝업 닫기
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // 배경 클릭시 닫기
+        function closeModalOnOverlay(event, modalId) {
+            if (event.target === document.getElementById(modalId)) {
+                closeModal(modalId);
+            }
+        }
+
+        // 완료 창 띄우기 함수
+        function showSuccessAlert(title, message) {
+            document.getElementById('successTitle').innerText = title;
+            document.getElementById('successMessage').innerText = message;
+            openModal('successModal');
+        }
+
+        // 회원가입 제출 처리
+        function handleRegisterSubmit(event) {
+            event.preventDefault();
+            const id = document.getElementById('regId').value;
+            const email = document.getElementById('regEmail').value;
+            const pw = document.getElementById('regPw').value;
+
+            // 계정 저장
+            users.push({ id: id, email: email, pw: pw });
+
+            closeModal('registerModal');
+            event.target.reset(); // 입력창 청소
+
+            // 완료 알림창 열기
+            showSuccessAlert('회원가입 완료', id + '님, 가입을 진심으로 축하합니다!');
+        }
+
+        // 로그인 제출 처리
+        function handleLoginSubmit(event) {
+            event.preventDefault();
+            const id = document.getElementById('loginId').value;
+            const pw = document.getElementById('loginPw').value;
+
+            // 가입된 계정 중 일치하는 게 있는지 확인
+            const userExists = users.find(u => u.id === id && u.pw === pw);
+
+            // 가입 데이터가 없어도 테스트를 위해 로그인 통과되도록 세팅
+            const loggedInId = userExists ? userExists.id : id;
+
+            closeModal('loginModal');
+            event.target.reset();
+
+            // 대문 화면 UI 로그인 완료 상태로 변경
+            document.getElementById('mainMessage').innerHTML = '🔥 <strong>' + loggedInId + '</strong>님 환영합니다! 로샵 멤버가 되셨습니다.';
+            document.getElementById('beforeLogin').style.display = 'none';
+            document.getElementById('afterLogin').style.display = 'block';
+
+            // 완료 알림창 열기
+            showSuccessAlert('로그인 성공', loggedInId + '님, 성공적으로 로그인되었습니다.');
+        }
+
+        // 로그아웃 처리
+        function handleLogout() {
+            document.getElementById('mainMessage').innerText = '로블록스 개발을 더 쉽게 만들어주는 공간입니다.';
+            document.getElementById('beforeLogin').style.display = 'flex';
+            document.getElementById('afterLogin').style.display = 'none';
+            showSuccessAlert('로그아웃', '로그아웃 되었습니다.');
+        }
+    </script>
 </body>
 </html>
