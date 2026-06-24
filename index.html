@@ -5,11 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>로샵 - 로블록스 개발을 더 쉽게</title>
     <style>
-        /* 기본 배경 스타일 */
+        /* 변수 설정 (다크모드/라이트모드 전환용) */
+        :root {
+            --bg-body: #1a1a1a;
+            --bg-container: #2a2a2a;
+            --bg-modal: #2e2e2e;
+            --bg-input: #1a1a1a;
+            --text-main: #ffffff;
+            --text-sub: #cccccc;
+            --border-color: #444444;
+            --accent-color: #00a2ff;
+        }
+
+        /* 라이트모드 스타일 테마 */
+        [data-theme="light"] {
+            --bg-body: #f0f2f5;
+            --bg-container: #ffffff;
+            --bg-modal: #ffffff;
+            --bg-input: #f0f2f5;
+            --text-main: #1a1a1a;
+            --text-sub: #666666;
+            --border-color: #cccccc;
+        }
+
+        /* 기본 기본 배경 및 전환 효과 */
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #1a1a1a;
-            color: #ffffff;
+            background-color: var(--bg-body);
+            color: var(--text-main);
             margin: 0;
             padding: 0;
             display: flex;
@@ -17,33 +40,39 @@
             align-items: center;
             height: 100vh;
             text-align: center;
+            transition: background-color 0.3s, color 0.3s;
         }
         .container {
-            background-color: #2a2a2a;
+            background-color: var(--bg-container);
             padding: 40px;
             border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 450px;
+            box-sizing: border-box;
+            transition: background-color 0.3s;
         }
         h1 {
-            color: #00a2ff;
+            color: var(--accent-color);
             margin-bottom: 10px;
         }
         p {
-            color: #cccccc;
+            color: var(--text-sub);
             font-size: 1.1rem;
         }
         
-        /* 메인 화면 버튼들 */
+        /* 버튼 공통 구조 */
         .btn-group {
             display: flex;
             gap: 10px;
             justify-content: center;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
         .btn {
             display: inline-block;
             padding: 12px 24px;
-            background-color: #00a2ff;
+            background-color: var(--accent-color);
             color: white;
             text-decoration: none;
             border-radius: 5px;
@@ -56,13 +85,16 @@
             background-color: #0082cc;
         }
         .btn.secondary {
-            background-color: #444444;
+            background-color: #555555;
+            color: white;
+        }
+        [data-theme="light"] .btn.secondary {
+            background-color: #e0e0e0;
+            color: #333333;
         }
         .btn.secondary:hover {
-            background-color: #555555;
+            background-color: #666666;
         }
-
-        /* 로그아웃 버튼 스타일 */
         .btn.danger {
             background-color: #ff4a4a;
         }
@@ -70,7 +102,7 @@
             background-color: #cc3333;
         }
 
-        /* 팝업창(모달) 전체 배경 */
+        /* 팝업창(모달) 공통 배경 */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -93,67 +125,66 @@
 
         /* 팝업창 본체 */
         .modal-box {
-            background-color: #2e2e2e;
+            background-color: var(--bg-modal);
             padding: 30px;
             border-radius: 12px;
             width: 90%;
             max-width: 360px;
             text-align: left;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
             position: relative;
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
         }
         .modal-box h2 {
             margin-top: 0;
-            color: #00a2ff;
+            color: var(--accent-color);
             font-size: 1.5rem;
             margin-bottom: 20px;
         }
 
-        /* 입력창 스타일 */
+        /* 입력창 디자인 */
         .input-group {
             margin-bottom: 15px;
         }
         .input-group label {
             display: block;
             margin-bottom: 5px;
-            color: #bbbbbb;
+            color: var(--text-sub);
             font-size: 0.9rem;
         }
         .input-group input {
             width: 100%;
             padding: 10px;
             box-sizing: border-box;
-            background-color: #1a1a1a;
-            border: 1px solid #444444;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
             border-radius: 5px;
-            color: white;
+            color: var(--text-main);
             font-size: 1rem;
         }
         .input-group input:focus {
-            border-color: #00a2ff;
+            border-color: var(--accent-color);
             outline: none;
         }
 
-        /* 팝업창 닫기 버튼 */
+        /* 팝업 우측 상단 X 버튼 */
         .close-btn {
             position: absolute;
             top: 15px;
             right: 15px;
             background: none;
             border: none;
-            color: #888888;
+            color: var(--text-sub);
             font-size: 1.5rem;
             cursor: pointer;
         }
-        .close-btn:hover {
-            color: white;
-        }
-        
-        /* 제출 버튼 */
+
+        /* 모달 안의 큰 확인 버튼 */
         .submit-btn {
             width: 100%;
             padding: 12px;
-            background-color: #00a2ff;
+            background-color: var(--accent-color);
             border: none;
             border-radius: 5px;
             color: white;
@@ -162,18 +193,17 @@
             cursor: pointer;
             margin-top: 10px;
         }
-        .submit-btn:hover {
-            background-color: #0082cc;
-        }
 
-        /* 완료 알림창 (커스텀 알럿) */
-        .alert-box {
-            text-align: center;
-        }
-        .alert-icon {
-            font-size: 3rem;
-            color: #2ed573;
-            margin-bottom: 10px;
+        /* 설정창 내부 테마 변경 옵션 버튼 규칙 */
+        .theme-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-top: 15px;
         }
     </style>
 </head>
@@ -181,15 +211,23 @@
 
     <div class="container">
         <h1>로샵 (Roshop)</h1>
-        <p id="mainMessage">로블록스 개발을 더 쉽게 해주다 로블록스 샵.</p>
+        <p id="mainMessage">로블록스 개발을 더 쉽게 만들어주는 공간입니다.</p>
         
         <div id="beforeLogin" class="btn-group">
             <button class="btn" onclick="openModal('loginModal')">로그인</button>
             <button class="btn secondary" onclick="openModal('registerModal')">회원가입</button>
         </div>
 
-        <div id="afterLogin" class="btn-group" style="display: none;">
-            <button class="btn danger" onclick="handleLogout()">로그아웃</button>
+        <div id="afterLogin" style="display: none; margin-top: 25px;">
+            <hr style="border: 0; height: 1px; background: var(--border-color); margin-bottom: 20px;">
+            <div class="btn-group">
+                <button class="btn" onclick="alert('서버 등록 기능 준비 중입니다!')">서버 등록하기</button>
+                <button class="btn" style="background-color: #2ed573;" onclick="alert('서버 둘러보기 기능 준비 중입니다!')">서버 둘러보기</button>
+            </div>
+            <div class="btn-group" style="margin-top: 15px;">
+                <button class="btn secondary" onclick="openModal('settingsModal')">⚙️ 설정창</button>
+                <button class="btn danger" onclick="handleLogout()">로그아웃</button>
+            </div>
         </div>
     </div>
 
@@ -199,11 +237,11 @@
             <h2>로그인</h2>
             <form onsubmit="handleLoginSubmit(event)">
                 <div class="input-group">
-                    <label for="loginId">아이디</label>
+                    <label>아이디</label>
                     <input type="text" id="loginId" required placeholder="아이디를 입력하세요">
                 </div>
                 <div class="input-group">
-                    <label for="loginPw">비밀번호</label>
+                    <label>비밀번호</label>
                     <input type="password" id="loginPw" required placeholder="비밀번호를 입력하세요">
                 </div>
                 <button type="submit" class="submit-btn">로그인하기</button>
@@ -217,15 +255,15 @@
             <h2>회원가입</h2>
             <form onsubmit="handleRegisterSubmit(event)">
                 <div class="input-group">
-                    <label for="regId">아이디</label>
+                    <label>아이디</label>
                     <input type="text" id="regId" required placeholder="사용할 아이디 입력">
                 </div>
                 <div class="input-group">
-                    <label for="regEmail">이메일</label>
+                    <label>이메일</label>
                     <input type="email" id="regEmail" required placeholder="이메일 주소 입력">
                 </div>
                 <div class="input-group">
-                    <label for="regPw">비밀번호</label>
+                    <label>비밀번호</label>
                     <input type="password" id="regPw" required placeholder="비밀번호 입력">
                 </div>
                 <button type="submit" class="submit-btn">가입 완료</button>
@@ -233,90 +271,94 @@
         </div>
     </div>
 
-    <div id="successModal" class="modal-overlay">
-        <div class="modal-box alert-box">
-            <div class="alert-icon">✓</div>
-            <h2 id="successTitle">완료</h2>
-            <p id="successMessage" style="color: #ffffff; margin-bottom: 20px;">성공적으로 처리되었습니다.</p>
-            <button class="btn" onclick="closeModal('successModal')" style="width: 100%;">확인</button>
+    <div id="settingsModal" class="modal-overlay" onclick="closeModalOnOverlay(event, 'settingsModal')">
+        <div class="modal-box">
+            <button class="close-btn" onclick="closeModal('settingsModal')">&times;</button>
+            <h2>⚙️ 설정</h2>
+            <p style="font-size: 0.9rem; margin-bottom: 10px;">사이트 환경을 커스텀합니다.</p>
+            
+            <div class="theme-option">
+                <span id="themeLabel" style="font-weight: bold;">현재 모드: 다크모드</span>
+                <button id="themeToggleBtn" class="btn secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="toggleTheme()">하얀색으로 변경</button>
+            </div>
+            <button class="submit-btn" style="margin-top: 20px;" onclick="closeModal('settingsModal')">닫기</button>
         </div>
     </div>
 
     <script>
-        // 임시 회원 데이터 저장 배열 (새로고침하면 초기화됨)
         let users = [];
 
-        // 팝업 열기
         function openModal(modalId) {
             document.getElementById(modalId).classList.add('active');
         }
 
-        // 팝업 닫기
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
         }
 
-        // 배경 클릭시 닫기
         function closeModalOnOverlay(event, modalId) {
             if (event.target === document.getElementById(modalId)) {
                 closeModal(modalId);
             }
         }
 
-        // 완료 창 띄우기 함수
-        function showSuccessAlert(title, message) {
-            document.getElementById('successTitle').innerText = title;
-            document.getElementById('successMessage').innerText = message;
-            openModal('successModal');
-        }
-
-        // 회원가입 제출 처리
+        // 회원가입 완료
         function handleRegisterSubmit(event) {
             event.preventDefault();
             const id = document.getElementById('regId').value;
             const email = document.getElementById('regEmail').value;
             const pw = document.getElementById('regPw').value;
 
-            // 계정 저장
             users.push({ id: id, email: email, pw: pw });
-
             closeModal('registerModal');
-            event.target.reset(); // 입력창 청소
+            event.target.reset();
 
-            // 완료 알림창 열기
-            showSuccessAlert('회원가입 완료', id + '님, 가입을 진심으로 축하합니다!');
+            alert(id + '님, 회원가입이 완료되었습니다! 로그인을 진행해 주세요.');
         }
 
-        // 로그인 제출 처리
+        // 로그인 완료 -> 비밀 메뉴판 개방
         function handleLoginSubmit(event) {
             event.preventDefault();
             const id = document.getElementById('loginId').value;
             const pw = document.getElementById('loginPw').value;
 
-            // 가입된 계정 중 일치하는 게 있는지 확인
             const userExists = users.find(u => u.id === id && u.pw === pw);
-
-            // 가입 데이터가 없어도 테스트를 위해 로그인 통과되도록 세팅
             const loggedInId = userExists ? userExists.id : id;
 
             closeModal('loginModal');
             event.target.reset();
 
-            // 대문 화면 UI 로그인 완료 상태로 변경
-            document.getElementById('mainMessage').innerHTML = '🔥 <strong>' + loggedInId + '</strong>님 환영합니다! 로샵 멤버가 되셨습니다.';
+            // 상단 메시지 변경 및 UI 스위칭
+            document.getElementById('mainMessage').innerHTML = '👋 안녕하세요 <strong>' + loggedInId + '</strong>님! 관리 메뉴에 진입했습니다.';
             document.getElementById('beforeLogin').style.display = 'none';
             document.getElementById('afterLogin').style.display = 'block';
-
-            // 완료 알림창 열기
-            showSuccessAlert('로그인 성공', loggedInId + '님, 성공적으로 로그인되었습니다.');
         }
 
-        // 로그아웃 처리
+        // 로그아웃
         function handleLogout() {
             document.getElementById('mainMessage').innerText = '로블록스 개발을 더 쉽게 만들어주는 공간입니다.';
             document.getElementById('beforeLogin').style.display = 'flex';
             document.getElementById('afterLogin').style.display = 'none';
-            showSuccessAlert('로그아웃', '로그아웃 되었습니다.');
+            alert('로그아웃 되었습니다.');
+        }
+
+        // 🌗 테마 상태 제어 함수 (다크모드 <-> 하얀색 라이트모드 변경)
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const toggleBtn = document.getElementById('themeToggleBtn');
+            const themeLabel = document.getElementById('themeLabel');
+
+            if (currentTheme === 'light') {
+                // 하얀색 상태에서 누르면 -> 다크모드로 변경
+                document.documentElement.removeAttribute('data-theme');
+                themeLabel.innerText = '현재 모드: 다크모드';
+                toggleBtn.innerText = '하얀색으로 변경';
+            } else {
+                // 다크모드 상태에서 누르면 -> 하얀색(라이트모드)으로 변경
+                document.documentElement.setAttribute('data-theme', 'light');
+                themeLabel.innerText = '현재 모드: 라이트모드';
+                toggleBtn.innerText = '다크모드로 변경';
+            }
         }
     </script>
 </body>
