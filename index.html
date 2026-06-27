@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>로샵 (Roshop)</title>
+    <style>
+        /* 테마 변수 */
+        :root { --bg-body: #1a1a1a; --bg-container: #2a2a2a; --text-main: #ffffff; --accent-color: #00a2ff; }
+        [data-theme="light"] { --bg-body: #f0f2f5; --bg-container: #ffffff; --text-main: #1a1a1a; }
+        
+        body { font-family: sans-serif; background-color: var(--bg-body); color: var(--text-main); display: flex; justify-content: center; padding: 20px; transition: 0.3s; }
+        .container { background-color: var(--bg-container); padding: 30px; border-radius: 15px; width: 100%; max-width: 500px; transition: 0.3s; }
+        .btn { padding: 10px 15px; background: var(--accent-color); color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .user-item { border: 1px solid #444; padding: 10px; margin: 5px 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: #333; padding: 20px; border-radius: 10px; width: 80%; max-width: 400px; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>로샵 (Roshop)</h1>
+    <p id="mainMsg">로블록스 개발의 모든 것.</p>
+    
+    <div id="authDiv">
+        <button class="btn" onclick="openModal('loginModal')">로그인</button>
+    </div>
+
+    <div id="serviceDiv" style="display:none;">
+        <button class="btn" onclick="openModal('serverModal')">서버 등록하기</button>
+        <button class="btn" onclick="alertServers()">서버 둘러보기</button>
+        <button class="btn" onclick="toggleTheme()">테마 변경</button>
+        <div id="adminPanel" style="display:none; margin-top:20px; border-top:1px solid #555;">
+            <h3>🛡️ 관리자 모드</h3>
+            <div id="userList"></div>
+        </div>
+        <button class="btn" onclick="location.reload()">로그아웃</button>
+    </div>
+</div>
+
+<!-- 모달 생략 (위 코드와 동일) -->
+<div id="loginModal" class="modal"><div class="modal-content">
+    <h2>로그인</h2>
+    <input type="text" id="lId" placeholder="ID"><input type="password" id="lPw" placeholder="PW">
+    <button class="btn" onclick="login()">확인</button>
+</div></div>
+
+<div id="serverModal" class="modal"><div class="modal-content">
+    <h2>서버 등록</h2>
+    <input type="text" id="sLink" placeholder="서버 링크"><input type="text" id="sDesc" placeholder="소개">
+    <button class="btn" onclick="regServer()">등록</button>
+</div></div>
+
+<script>
+    let users = JSON.parse(localStorage.getItem('users')) || [{id:'admin', pw:'admin', banned:false, verified:false, points:0}];
+    let servers = JSON.parse(localStorage.getItem('servers')) || [];
+
+    // 테마 전환 함수
+    function toggleTheme() {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        if(isLight) document.documentElement.removeAttribute('data-theme');
+        else document.documentElement.setAttribute('data-theme', 'light');
+    }
+
+    function login() {
+        const id = document.getElementById('lId').value;
+        const pw = document.getElementById('lPw').value;
+        const user = users.find(u => u.id === id && u.pw === pw);
+        if(!user) return alert('로그인 실패');
+        if(user.banned) return alert('밴 당한 계정입니다.');
+        
+        document.getElementById('authDiv').style.display = 'none';
+        document.getElementById('serviceDiv').style.display = 'block';
+        if(id === 'admin') { document.getElementById('adminPanel').style.display = 'block'; renderAdmin(); }
+    }
+
+    function renderAdmin() {
+        const list = document.getElementById('userList');
+        list.innerHTML = users.map((u, i) => `
+            <div class="user-item">
+                <span>${u.id} ${u.verified ? '✅' : ''} ${u.banned ? '(밴)' : ''}</span>
+                <div>
+                    <button onclick="toggle('banned', ${i})">밴</button>
+                    <button onclick="toggle('verified', ${i})">인증</button>
+                </div>
+            </div>`).join('');
+    }
+
+    function toggle(key, i) {
+        users[i][key] = !users[i][key];
+        localStorage.setItem('users', JSON.stringify(users));
+        renderAdmin();
+    }
+
+    function regServer() {
+        servers.push({link: document.getElementById('sLink').value, desc: document.getElementById('sDesc').value});
+        localStorage.setItem('servers', JSON.stringify(servers));
+        alert('등록 완료!'); closeModal('serverModal');
+    }
+
+    function alertServers() { alert(servers.map(s => s.link + ": " + s.desc).join('\n') || '등록된 서버가 없습니다.'); }
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+</script>
+</body>
+</html>
+
