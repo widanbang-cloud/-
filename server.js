@@ -57,6 +57,12 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+// 5분마다 자기 자신 찌르기 (잠들기 방지)
+setInterval(() => {
+  fetch('https://roshop-server.onrender.com')
+    .then(() => console.log('서버 깨어있음 ✅'))
+    .catch(() => console.log('핑 실패'));
+}, 5 * 60 * 1000);
 app.listen(PORT, () => {
   console.log(`서버 실행중: 포트 ${PORT}`);
 });
