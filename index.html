@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로샵 - 로블록스 개발을 더 쉽게</title>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <style>
+        :root {
+            --bg-body: #1a1a1a;
+            --bg-container: #2a2a2a;
+            --bg-modal: #2e2e2e;
+            --bg-input: #1a1a1a;
+            --bg-card: #333333;
+            --text-main: #ffffff;
+            --text-sub: #cccccc;
+            --border-color: #444444;
+            --accent-color: #00a2ff;
+        }
+        [data-theme="light"] {
+            --bg-body: #f0f2f5;
+            --bg-container: #ffffff;
+            --bg-modal: #ffffff;
+            --bg-input: #f0f2f5;
+            --bg-card: #f5f5f5;
+            --text-main: #1a1a1a;
+            --text-sub: #666666;
+            --border-color: #cccccc;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* 상단 포인트 바 */
+        #topBar {
+            display: none;
+            width: 100%;
+            background-color: var(--bg-container);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 500;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            transition: background-color 0.3s;
+        }
+        #topBar.show { display: flex; }
+        #pointDisplay {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #pointDisplay .coin { color: #ffd700; }
+        #adminPlusBtn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        #adminPlusBtn.show { display: flex; }
+
+        /* 메인 컨테이너 */
+        .main-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            width: 100%;
+            padding: 40px 20px;
+        }
+        .container {
+            background-color: var(--bg-container);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        h1 { color: var(--accent-color); margin-bottom: 10px; }
+        p { color: var(--text-sub); font-size: 1.1rem; }
+
+        /* 버튼 */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: filter 0.2s;
+        }
+        .btn:hover { filter: brightness(0.85); }
+        .btn.secondary { background-color: #555555; color: white; }
+        [data-theme="light"] .btn.secondary { background-color: #e0e0e0; color: #333333; }
+        .btn.danger { background-color: #ff4a4a; }
+        .btn.green { background-color: #2ed573; }
+        .btn.purple { background-color: #9b59b6; }
+        .btn.sm { padding: 7px 14px; font-size: 0.85rem; }
+
+        /* 모달 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-box {
+            background-color: var(--bg-modal);
+            padding: 30px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: left;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            position: relative;
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .modal-box.wide { max-width: 700px; }
+        .modal-box h2 { margin-top: 0; color: var(--accent-color); font-size: 1.5rem; margin-bottom: 20px; }
+        .close-btn {
+            position: absolute;
+            top: 15px; right: 15px;
+            background: none; border: none;
+            color: var(--text-sub);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* 입력창 */
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; color: var(--text-sub); font-size: 0.9rem; }
+        .input-group input,
+        .input-group textarea,
+        .input-group select {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            color: var(--text-main);
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+        }
+        .input-group input:focus,
+        .input-group textarea:focus { border-color: var(--accent-color); outline: none; }
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: filter 0.2s;
+        }
+        .submit-btn:hover { filter: brightness(0.85); }
+
+        /* 오류 메시지 */
+        .error-msg {
+            color: #ff4a4a;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+        .error-msg.show { display: block; }
+
+        /* 이메일 인증 코드 입력 영역 */
+        .verify-step { display: none; }
+        .verify-step.show { display: block; }
+        .code-input-row {
+            display: flex;
+            gap: 8px;
+        }
+        .code-input-row input { flex: 1; }
+        .code-input-row button {
+            padding: 10px 14px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            transition: filter 0.2s;
+        }
+        .code-input-row button:hover { filter: brightness(0.85); }
+        .success-msg {
+            color: #2ed573;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+        .success-msg.show { display: block; }
+        .sending-indicator {
+            color: var(--text-sub);
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+        .sending-indicator.show { display: block; }
+        .timer-text {
+            font-size: 0.8rem;
+            color: #ff9f43;
+            margin-top: 4px;
+        }
+        .theme-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        /* 관리자 패널 */
+        #adminPanel {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+        }
+        .admin-section {
+            background-color: var(--bg-container);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .admin-section h3 {
+            color: var(--accent-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .user-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .user-row .name-part {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+        }
+        .user-row .meta { font-size: 0.82rem; color: var(--text-sub); }
+        .user-row .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .badge-verified { color: #00c853; font-size: 1rem; }
+        .badge-banned {
+            background: #ff4a4a;
+            color: white;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.75rem;
+        }
+
+        /* 서버 카드 */
+        .server-card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .server-card .server-top {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .server-card img {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: #333;
+        }
+        .server-card .server-info { flex: 1; }
+        .server-card .server-title {
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .server-card .server-desc {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-bottom: 8px;
+        }
+        .server-card .server-link a {
+            color: var(--accent-color);
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+        .server-card .server-link a:hover { text-decoration: underline; }
+        .server-card .server-author {
+            font-size: 0.78rem;
+            color: var(--text-sub);
+            margin-top: 6px;
+        }
+
+        /* 서브 선택 모달 */
+        .action-choice {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .action-choice .btn { flex: 1; }
+
+        /* 탭 */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 8px 18px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-main);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        /* 이미지 미리보기 */
+        #serverImagePreview {
+            width: 100%;
+            max-height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .hr-sep { border: 0; height: 1px; background: var(--border-color); margin: 20px 0; }
+
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            color: var(--text-sub);
+            padding: 30px 0;
+            font-size: 0.95rem;
+        }
+
+        /* 알림 토스트 */
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 9999;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 포인트 클릭 가능 스타일 */
+        #pointDisplay { cursor: pointer; }
+        #pointDisplay:hover { border-color: var(--accent-color); }
+
+        /* 상점 아이템 카드 그리드 */
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 14px;
+            margin-top: 10px;
+        }
+        .shop-card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+        .shop-card:hover { transform: translateY(-3px); border-color: var(--accent-color); }
+        .shop-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            background: #444;
+            display: block;
+        }
+        .shop-card-no-img {
+            width: 100%;
+            height: 120px;
+            background: #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+        }
+        .shop-card-body { padding: 10px; }
+        .shop-card-name { font-weight: bold; font-size: 0.95rem; margin-bottom: 4px; }
+        .shop-card-price { color: #ffd700; font-size: 0.9rem; }
+
+        /* 상품 상세 모달 */
+        .item-detail-img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .item-detail-price {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #ffd700;
+            margin: 10px 0;
+        }
+        .purchase-confirm-box {
+            background: var(--bg-input);
+            border: 1px solid #ff9f43;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            font-size: 0.85rem;
+            color: #ff9f43;
+            line-height: 1.5;
+        }
+
+        /* 구매 완료 박스 */
+        .download-box {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+            margin-top: 10px;
+        }
+        .download-box .warning {
+            font-size: 0.82rem;
+            color: #ff9f43;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        /* 사용내역 */
+        .history-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+        .history-row:last-child { border-bottom: none; }
+        .history-row .h-label { color: var(--text-sub); }
+        .history-row .h-amount { font-weight: bold; }
+        .history-row .h-amount.minus { color: #ff4a4a; }
+        .history-row .h-amount.plus { color: #2ed573; }
+        .history-row .h-amount.refunded { text-decoration: line-through; color: var(--text-sub); }
+        .history-row .h-refund-label { font-size: 0.75rem; color: #2ed573; margin-left: 6px; }
+    </style>
+</head>
+<body>
+
+<!-- 상단 포인트 바 -->
+<div id="topBar">
+    <div id="pointDisplay" onclick="openModal('historyModal')" title="사용내역 보기">
+        <span class="coin">🪙</span>
+        <span id="myPointText">0</span> 포인트
+    </div>
+    <button id="userUploadBtn" title="스튜디오 물건 올리기" onclick="openShopUpload()" style="background:#9b59b6;color:white;border:none;border-radius:50%;width:28px;height:28px;font-size:1.1rem;cursor:pointer;display:none;align-items:center;justify-content:center;">+</button>
+    <button id="adminPlusBtn" title="관리자 메뉴" onclick="openModal('adminActionModal')">+</button>
+</div>
+
+<!-- 메인 -->
+<div class="main-wrap">
+    <div class="container" id="mainContainer">
+        <h1>로샵 (Roshop)</h1>
+        <p id="mainMessage">로블록스 개발을 더 쉽게 만들어주는 공간입니다.</p>
+
+        <div id="beforeLogin" class="btn-group">
+            <button class="btn" onclick="openModal('loginModal')">로그인</button>
+            <button class="btn secondary" onclick="openModal('registerModal')">회원가입</button>
+        </div>
+
+        <div id="afterLogin" style="display:none; margin-top:25px;">
+            <hr class="hr-sep">
+            <div class="btn-group">
+                <button class="btn" onclick="openServerRegister()">서버 등록하기 <span style="font-size:0.8rem;opacity:0.8;">(500🪙)</span></button>
+                <button class="btn green" onclick="openModal('browseModal')">서버 둘러보기</button>
+            </div>
+            <div class="btn-group" style="margin-top:10px;">
+                <button class="btn purple" onclick="openModal('shopModal')">🛒 물건보기</button>
+            </div>
+            <div class="btn-group" style="margin-top:15px;">
+                <button class="btn secondary" onclick="openModal('settingsModal')">⚙️ 설정창</button>
+                <button class="btn danger" onclick="handleLogout()">로그아웃</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 관리자 패널 (메인 대신 표시) -->
+    <div id="adminPanel" style="display:none;">
+        <h1 style="color:var(--accent-color);text-align:center;margin-bottom:24px;">🛡️ 관리자 패널</h1>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchAdminTab('users')">👥 유저 목록</button>
+            <button class="tab-btn" onclick="switchAdminTab('servers')">🖥️ 서버 목록</button>
+        </div>
+
+        <!-- 유저 목록 탭 -->
+        <div id="adminTabUsers">
+            <div class="admin-section">
+                <h3>가입된 유저</h3>
+                <div id="adminUserList">
+                    <div class="empty-state">가입된 유저가 없습니다.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 서버 목록 탭 -->
+        <div id="adminTabServers" style="display:none;">
+            <div class="admin-section">
+                <h3>등록된 서버</h3>
+                <div id="adminServerList">
+                    <div class="empty-state">등록된 서버가 없습니다.</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align:center;margin-top:10px;">
+            <button class="btn danger" onclick="handleLogout()">로그아웃</button>
+            <button class="btn secondary" style="margin-left:10px;" onclick="openModal('settingsModal')">⚙️ 설정</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 모달들 ===== -->
+
+<!-- 로그인 -->
+<div id="loginModal" class="modal-overlay" onclick="closeModalOnOverlay(event,'loginModal')">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
+        <h2>로그인</h2>
+        <div id="loginLockMsg" class="error-msg">로그인 시도 횟수 초과 (3회). 잠시 후 다시 시도해주세요.</div>
+
+        <!-- 1단계: 아이디 + 비밀번호 -->
+        <div id="loginStep1">
+            <div class="input-group">
+                <label>아이디</label>
+                <input type="text" id="loginId" placeholder="아이디를 입력하세요">
+            </div>
+            <div class="input-group">
+                <label>비밀번호</label>
+                <input type="password" id="loginPw" placeholder="비밀번호를 입력하세요">
+            </div>
+            <div id="loginError" class="error-msg"></div>
+            <button class="submit-btn" onclick="handleLoginStep1()">다음 (이메일 인증)</button>
+        </div>
+
+        <!-- 2단계: 이메일 인증코드 -->
+        <div id="loginStep2" style="display:none;">
+            <p style="font-size:0.9rem;color:var(--text-sub);margin-bottom:15px;">
+                📨 가입된 이메일로 인증코드를 발송했습니다.
+            </p>
+            <div id="loginSendingIndicator" class="sending-indicator">📨 이메일 발송 중...</div>
+            <div id="loginSendOk" class="success-msg">✅ 인증코드 발송 완료!</div>
+            <div class="input-group">
+                <label>인증 코드 <span id="loginCodeTimer" class="timer-text"></span></label>
+                <div class="code-input-row">
+                    <input type="text" id="loginCode" placeholder="6자리 코드 입력" maxlength="6">
+                    <button onclick="resendLoginCode()">재발송</button>
+                </div>
+                <div id="loginCodeSuccess" class="success-msg">✅ 인증 완료!</div>
+                <div id="loginCodeError" class="error-msg"></div>
+            </div>
+            <button class="submit-btn" onclick="handleLoginStep2()">로그인 완료</button>
+            <button class="submit-btn" style="background:var(--bg-input);color:var(--text-sub);margin-top:8px;" onclick="backToLoginStep1()">← 돌아가기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 회원가입 -->
+<div id="registerModal" class="modal-overlay" onclick="closeModalOnOverlay(event,'registerModal')">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal('registerModal')">&times;</button>
+        <h2>회원가입</h2>
+        <div class="input-group">
+            <label>아이디</label>
+            <input type="text" id="regId" placeholder="사용할 아이디 입력">
+        </div>
+        <div class="input-group">
+            <label>이메일</label>
+            <div style="display:flex;gap:8px;">
+                <input type="email" id="regEmail" placeholder="이메일 주소 입력" style="flex:1;">
+                <button onclick="sendVerificationCode()" id="sendCodeBtn" style="padding:10px 12px;background:var(--accent-color);color:white;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;font-size:0.85rem;">인증코드 받기</button>
+            </div>
+            <div id="sendingIndicator" class="sending-indicator">📨 이메일 발송 중...</div>
+            <div id="sendCodeSuccess" class="success-msg">✅ 인증코드를 발송했습니다! 이메일을 확인해주세요.</div>
+            <div id="sendCodeError" class="error-msg"></div>
+        </div>
+
+        <!-- 인증코드 입력 (코드 발송 후 표시) -->
+        <div class="input-group verify-step" id="verifyStep">
+            <label>인증 코드 <span id="codeTimer" class="timer-text"></span></label>
+            <div class="code-input-row">
+                <input type="text" id="regCode" placeholder="6자리 코드 입력" maxlength="6">
+                <button onclick="checkVerifyCode()">확인</button>
+            </div>
+            <div id="verifySuccess" class="success-msg">✅ 이메일 인증 완료!</div>
+            <div id="verifyError" class="error-msg"></div>
+        </div>
+
+        <div class="input-group">
+            <label>비밀번호</label>
+            <input type="password" id="regPw" placeholder="비밀번호 입력">
+        </div>
+        <div id="regError" class="error-msg"></div>
+        <button class="submit-btn" onclick="handleRegisterSubmit()">가입 완료</button>
+    </div>
+</div>
+
+<!-- 설정 -->
+<div id="settingsModal" class="modal-overlay" onclick="closeModalOnOverlay(event,'settingsModal')">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal('settingsModal')">&times;</button>
+        <h2>⚙️ 설정</h2>
+        <p style="font-size:0.9rem;margin-bottom:10px;">사이트 환경을 커스텀합니다.</p>
+        <div class="theme-option">
+            <span id="themeLabel" style="font-weight:bold;">현재 모드: 다크모드</span>
+            <button id="themeToggleBtn" class="btn secondary sm" onclick="toggleTheme()">하얀색으로 변경</button>
+        </div>
+        <button class="submit-btn" style="margin-top:20px;" onclick="closeModal('settingsModal')">닫기</button>
+    </div>
+</div>
+
+<!-- 관리자 + 액션 선택 모달 -->
+<div id="adminActionModal" class="modal-overlay" onclick="closeModalOnOverlay(event,'adminActionModal')">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal('adminActionModal')">&times;</button>
+        <h2>관리자 메뉴</h2>
+        <p style="color:var(--text-sub);font-size:0.9rem;margin-bottom:15px;">닉네임을 입력하고 작업을 선택하세요.</p>
+        <div class="input-group">
+            <label>닉네임 (아이디)</label>
+            <input type="text" id="adminTargetId" placeholder="대상 아이디 입력">
+        </div>
+        <div id="adminActionError" class="error-msg"></div>
+        <div class="action-choice">
+            <button class="btn" onclick="adminGivePoint()">🪙 포인트 주기</button>
+            <button class="btn danger" onclick="adminBanUser()">🔨 밴하기</button>
+            <button class="btn green" style="flex-shrink:0;padding:12px 10px;" onclick="adminVerifyUser()">✅ 인증</button>
+        </div>
+        <div id="adminPointInputArea" style="display:none;margin-top:15px;">
+            <div class="input-group">
+                <label>지급할 포인트</label>
+                <input type="number" id="adminPointAmount" placeholder="숫자 입력" min="1">
+            </div>
+            <button class="submit-btn" onclick="adminConfirmPoint()">포인트 지급 확인</button>
+        </div>
+    </div>
+</div>
+
+<!-- 서버 등록 모달 -->
+<div id="serverRegModal" class="modal-overlay" onclick="closeModalOnOverlay(event,'serverRegModal')">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal('serverRegModal')">&times;</button>
+        <h2>🖥️ 서버 등록</h2>
+        <div class="input-group">
+            <label>디스코드 초대 링크</label>
+            <input type="text" id="srvDiscord" placeholder="https://discord.gg/...">
+        </div>
+        <div class="input-group">
+            <label>서버 소개</label>
+            <textarea id="srvDesc" rows="3" placeholder="서버를 소개해주세요..."></textarea>
+        </div>
+        <div class="input-group">
+            <label>서버 대표 이미지</label>
+            <input type="file" id="srvImage" accept="image/*" onchange="previewServerImage(event)">
+            <img id="serverImagePreview" src="" alt="미리보기">
+        </div>
+        <div id="srvError" class="error-msg"></div>
+        <button class="submit-btn" onclick="handleServerRegister()">서버 등록하기</button>
+    </div>
+</div>
+
+<!-- 서버 둘러보기 모달 -->
+<div id="browseModal" class="modal-overlay" onclick="closeModalOnOverlay(event,'browseModal')">
+    <div class="modal-box wide">
+        <button class="close-btn" onclick="closeModal('browseModal')">&times;</button>
+        <h2>🌐 서버 둘러보기</h2>
+        <div id="serverBrowseList">
+            <div class="empty-state">등록된 서버가 없습니다.</div>
+        </div>
+    </div>
+</div>
+
+<!-- 물건 올리기 모달 -->
+<div id="shopUploadModal" class="modal-overlay" onclick="closeModalOnOverlay(event,'shopUploadModal')">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal('shopUploadModal')">&times;</button>
+        <h2>🛒 스튜디오 물건 올리기</h2>
+        <div class="input-group">
+            <label>물건 이름</label>
+            <input type="text" id="itemName" placeholder="물건 이름 입력">
+        </div>
+        <div class="input-group">
+            <label>물건 소개</label>
+            <textarea id="itemDesc" rows="3" placeholder="물건을 소개해주세요..."></textarea>
+        </div>
+        <div class="input-group">
+            <label>파일 올리기 <span style="font-size:0.8rem;color:var(--text-sub);">(스튜디오 파일: .rbxm, .rbxmx, .lua, .rbxl, .rbxlx)</span></label>
+            <input type="file" id="itemFile" accept=".rbxm,.rbxmx,.lua,.rbxl,.rbxlx">
+            <div id="itemFileLabel" style="font-size:0.82rem;color:#2ed573;margin-top:4px;"></div>
+        </div>
+        <div class="input-group">
+            <label>사진</label>
+            <input type="file" id="itemImage" accept="image/*" onchange="previewItemImage(event)">
+            <img id="itemImagePreview" src="" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-top:8px;display:none;">
+        </div>
+        <div class="input-group">
+            <label>가격 (포인트)</label>
+            <input type="number" id="itemPrice" placeholder="예: 500" min="1">
+        </div>
+        <div id="shopUploadError" class="error-msg"></div>
+        <div style="display:flex;gap:10px;margin-top:10px;">
+            <button class="submit-btn" onclick="handleShopUpload()">등록</button>
+            <button class="submit-btn" style="background:var(--bg-input);color:var(--text-sub);" onclick="closeModal('shopUploadModal')">취소</button>
+        </div>
+    </div>
+</div>
+
+<!-- 물건 보기 모달 -->
+<div id="shopModal" class="modal-overlay" onclick="closeModalOnOverlay(event,'shopModal')">
+    <div class="modal-box wide">
+        <button class="close-btn" onclick="closeModal('shopModal')">&times;</button>
+        <h2>🛒 물건보기</h2>
+        <div id="shopList"><div class="empty-state">등록된 물건이 없습니다.</div></div>
+    </div>
+</div>
+
+<!-- 물건 상세 모달 -->
+<div id="itemDetailModal" class="modal-overlay" onclick="closeModalOnOverlay(event,'itemDetailModal')">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal('itemDetailModal')">&times;</button>
+        <div id="itemDetailContent"></div>
+    </div>
+</div>
+
+<!-- 포인트 사용내역 모달 -->
+<div id="historyModal" class="modal-overlay" onclick="closeModalOnOverlay(event,'historyModal')">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal('historyModal')">&times;</button>
+        <h2>🪙 포인트 사용내역</h2>
+        <div id="historyList"><div class="empty-state">내역이 없습니다.</div></div>
+    </div>
+</div>
+
+<!-- 토스트 -->
+<div id="toast"></div>
+
+<script>
+    // ========== EmailJS 초기화 ==========
+    emailjs.init('aU3rCevoqT3HzraT_');
+
+    const EMAILJS_SERVICE = 'service_o4ss44m';
+    const EMAILJS_TEMPLATE = 'template_x4krmbn';
+
+    // ========== 상태 ==========
+    let users = [];
+    let servers = [];
+    let shopItems = [];
+    let purchases = [];
+    let currentUser = null;
+    let loginFailCount = 0;
+    let isAdmin = false;
+
+    // 이메일 인증 상태
+    let generatedCode = null;
+    let codeExpireTime = null;
+    let codeTimerInterval = null;
+    let emailVerified = false;
+
+    const ADMINS = ['pjw0901'];
+    const ADMIN_CREDENTIALS = [{ id: 'pjw0901', pw: '09012345' }];
+
+    // ========== localStorage 저장/불러오기 ==========
+    function saveData() {
+        try {
+            localStorage.setItem('rs_users', JSON.stringify(users));
+            localStorage.setItem('rs_servers', JSON.stringify(servers));
+            localStorage.setItem('rs_shopItems', JSON.stringify(shopItems));
+            localStorage.setItem('rs_purchases', JSON.stringify(purchases));
+        } catch(e) { console.warn('저장 실패:', e); }
+    }
+
+    function loadData() {
+        try {
+            users = JSON.parse(localStorage.getItem('rs_users') || '[]');
+            servers = JSON.parse(localStorage.getItem('rs_servers') || '[]');
+            shopItems = JSON.parse(localStorage.getItem('rs_shopItems') || '[]');
+            purchases = JSON.parse(localStorage.getItem('rs_purchases') || '[]');
+        } catch(e) {
+            users = []; servers = []; shopItems = []; purchases = [];
+        }
+    }
+
+    // 페이지 로드 시 데이터 불러오기
+    loadData();
+
+    // ========== 토스트 ==========
+    function showToast(msg, duration = 2500) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), duration);
+    }
+
+    // ========== 모달 ==========
+    function openModal(id) {
+        if (id === 'browseModal') {
+            const el = document.getElementById('serverBrowseList');
+            el.innerHTML = servers.length === 0
+                ? '<div class="empty-state">등록된 서버가 없습니다.</div>'
+                : servers.map(s => serverCardHTML(s)).join('');
+        }
+        if (id === 'adminActionModal') {
+            document.getElementById('adminTargetId').value = '';
+            document.getElementById('adminActionError').classList.remove('show');
+            document.getElementById('adminPointInputArea').style.display = 'none';
+        }
+        if (id === 'shopModal') renderShopList();
+        if (id === 'historyModal') renderHistory();
+        document.getElementById(id).classList.add('active');
+    }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function closeModalOnOverlay(e, id) {
+        if (e.target === document.getElementById(id)) closeModal(id);
+    }
+
+    // ========== 이메일 인증코드 발송 ==========
+    async function sendVerificationCode() {
+        const email = document.getElementById('regEmail').value.trim();
+        const sendErr = document.getElementById('sendCodeError');
+        const sendOk = document.getElementById('sendCodeSuccess');
+        const sending = document.getElementById('sendingIndicator');
+        sendErr.classList.remove('show');
+        sendOk.classList.remove('show');
+
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            sendErr.textContent = '올바른 이메일 주소를 입력해주세요.';
+            sendErr.classList.add('show');
+            return;
+        }
+        if (users.find(u => u.email === email)) {
+            sendErr.textContent = '이미 사용 중인 이메일입니다.';
+            sendErr.classList.add('show');
+            return;
+        }
+
+        // 6자리 코드 생성
+        generatedCode = String(Math.floor(100000 + Math.random() * 900000));
+        codeExpireTime = Date.now() + 5 * 60 * 1000; // 5분
+        emailVerified = false;
+
+        document.getElementById('verifySuccess').classList.remove('show');
+        document.getElementById('verifyError').classList.remove('show');
+        document.getElementById('regCode').value = '';
+
+        const sendBtn = document.getElementById('sendCodeBtn');
+        sendBtn.disabled = true;
+        sendBtn.textContent = '발송 중...';
+        sending.classList.add('show');
+
+        try {
+            await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+                to_email: email,
+                code: generatedCode
+            });
+            sending.classList.remove('show');
+            sendOk.classList.add('show');
+            sendBtn.textContent = '재발송';
+            sendBtn.disabled = false;
+
+            // 인증코드 입력창 표시
+            document.getElementById('verifyStep').classList.add('show');
+
+            // 타이머 시작
+            if (codeTimerInterval) clearInterval(codeTimerInterval);
+            updateCodeTimer();
+            codeTimerInterval = setInterval(updateCodeTimer, 1000);
+
+        } catch (err) {
+            sending.classList.remove('show');
+            sendErr.textContent = '이메일 발송에 실패했습니다. 다시 시도해주세요.';
+            sendErr.classList.add('show');
+            sendBtn.disabled = false;
+            sendBtn.textContent = '인증코드 받기';
+            console.error('EmailJS error:', err);
+        }
+    }
+
+    function updateCodeTimer() {
+        const timerEl = document.getElementById('codeTimer');
+        const remaining = Math.max(0, codeExpireTime - Date.now());
+        const min = Math.floor(remaining / 60000);
+        const sec = Math.floor((remaining % 60000) / 1000);
+        timerEl.textContent = `(${min}:${sec.toString().padStart(2,'0')} 남음)`;
+        if (remaining <= 0) {
+            clearInterval(codeTimerInterval);
+            timerEl.textContent = '(만료됨)';
+            generatedCode = null;
+        }
+    }
+
+    function checkVerifyCode() {
+        const input = document.getElementById('regCode').value.trim();
+        const okEl = document.getElementById('verifySuccess');
+        const errEl = document.getElementById('verifyError');
+        okEl.classList.remove('show');
+        errEl.classList.remove('show');
+
+        if (!generatedCode) {
+            errEl.textContent = '인증코드가 만료되었습니다. 다시 발송해주세요.';
+            errEl.classList.add('show');
+            return;
+        }
+        if (Date.now() > codeExpireTime) {
+            errEl.textContent = '인증코드가 만료되었습니다. 다시 발송해주세요.';
+            errEl.classList.add('show');
+            generatedCode = null;
+            return;
+        }
+        if (input !== generatedCode) {
+            errEl.textContent = '인증코드가 올바르지 않습니다.';
+            errEl.classList.add('show');
+            return;
+        }
+
+        emailVerified = true;
+        okEl.classList.add('show');
+        clearInterval(codeTimerInterval);
+        document.getElementById('codeTimer').textContent = '';
+        document.getElementById('regCode').disabled = true;
+    }
+
+    // ========== 회원가입 ==========
+    function handleRegisterSubmit() {
+        const id = document.getElementById('regId').value.trim();
+        const email = document.getElementById('regEmail').value.trim();
+        const pw = document.getElementById('regPw').value;
+        const errEl = document.getElementById('regError');
+        errEl.classList.remove('show');
+
+        if (!id || !email || !pw) {
+            errEl.textContent = '모든 항목을 입력해주세요.';
+            errEl.classList.add('show');
+            return;
+        }
+        if (!emailVerified) {
+            errEl.textContent = '이메일 인증을 완료해주세요.';
+            errEl.classList.add('show');
+            return;
+        }
+        if (users.find(u => u.email === email)) {
+            errEl.textContent = '이미 사용 중인 이메일입니다.';
+            errEl.classList.add('show');
+            return;
+        }
+        if (users.find(u => u.id === id)) {
+            errEl.textContent = '이미 사용 중인 아이디입니다.';
+            errEl.classList.add('show');
+            return;
+        }
+
+        users.push({ id, email, pw, points: 0, banned: false, verified: false });
+        saveData();
+        closeModal('registerModal');
+
+        // 초기화
+        document.getElementById('regId').value = '';
+        document.getElementById('regEmail').value = '';
+        document.getElementById('regPw').value = '';
+        document.getElementById('regCode').value = '';
+        document.getElementById('regCode').disabled = false;
+        document.getElementById('verifyStep').classList.remove('show');
+        document.getElementById('sendCodeSuccess').classList.remove('show');
+        document.getElementById('verifySuccess').classList.remove('show');
+        document.getElementById('sendCodeBtn').textContent = '인증코드 받기';
+        document.getElementById('sendCodeBtn').disabled = false;
+        emailVerified = false;
+        generatedCode = null;
+        if (codeTimerInterval) clearInterval(codeTimerInterval);
+
+        showToast(`${id}님, 회원가입 완료! 로그인해주세요. 🎉`);
+    }
+
+    // ========== 로그인 상태 ==========
+    let loginVerifiedCode = null;
+    let loginCodeExpire = null;
+    let loginCodeTimer = null;
+    let loginVerified = false;
+    let pendingLoginUser = null; // 1단계 통과한 유저 임시 저장
+
+    // 1단계: 아이디 + 비번 확인
+    async function handleLoginStep1() {
+        if (loginFailCount >= 3) {
+            document.getElementById('loginLockMsg').classList.add('show');
+            return;
+        }
+
+        const id = document.getElementById('loginId').value.trim();
+        const pw = document.getElementById('loginPw').value;
+        const errEl = document.getElementById('loginError');
+        errEl.classList.remove('show');
+
+        // 관리자는 이메일 인증 없이 바로 로그인
+        const adminMatch = ADMIN_CREDENTIALS.find(a => a.id === id && a.pw === pw);
+        if (adminMatch) {
+            loginFailCount = 0;
+            currentUser = { id, points: 0, banned: false, verified: false, isAdmin: true };
+            isAdmin = true;
+            resetLoginModal();
+            closeModal('loginModal');
+            enterAdminPanel();
+            return;
+        }
+
+        // 일반 유저 체크
+        const user = users.find(u => u.id === id && u.pw === pw);
+        if (!user) {
+            loginFailCount++;
+            const remain = 3 - loginFailCount;
+            errEl.textContent = `아이디 또는 비밀번호가 올바르지 않습니다. (남은 시도: ${remain}회)`;
+            errEl.classList.add('show');
+            if (loginFailCount >= 3) document.getElementById('loginLockMsg').classList.add('show');
+            return;
+        }
+        if (user.banned) {
+            errEl.textContent = '이 계정은 관리자에 의해 밴 처리되었습니다.';
+            errEl.classList.add('show');
+            loginFailCount++;
+            return;
+        }
+
+        // 1단계 통과 → 이메일 인증 단계로
+        pendingLoginUser = user;
+        loginFailCount = 0;
+        document.getElementById('loginStep1').style.display = 'none';
+        document.getElementById('loginStep2').style.display = 'block';
+        document.getElementById('loginCode').value = '';
+        document.getElementById('loginCodeSuccess').classList.remove('show');
+        document.getElementById('loginCodeError').classList.remove('show');
+        loginVerified = false;
+        await sendLoginCode();
+    }
+
+    async function sendLoginCode() {
+        const sending = document.getElementById('loginSendingIndicator');
+        const sendOk = document.getElementById('loginSendOk');
+        sending.classList.add('show');
+        sendOk.classList.remove('show');
+
+        loginVerifiedCode = String(Math.floor(100000 + Math.random() * 900000));
+        loginCodeExpire = Date.now() + 5 * 60 * 1000;
+
+        try {
+            await emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+                to_email: pendingLoginUser.email,
+                code: loginVerifiedCode
+            });
+            sending.classList.remove('show');
+            sendOk.classList.add('show');
+
+            if (loginCodeTimer) clearInterval(loginCodeTimer);
+            updateLoginTimer();
+            loginCodeTimer = setInterval(updateLoginTimer, 1000);
+        } catch (err) {
+            sending.classList.remove('show');
+            document.getElementById('loginCodeError').textContent = '이메일 발송 실패. 재발송 버튼을 눌러주세요.';
+            document.getElementById('loginCodeError').classList.add('show');
+        }
+    }
+
+    async function resendLoginCode() {
+        document.getElementById('loginCode').value = '';
+        document.getElementById('loginCodeSuccess').classList.remove('show');
+        document.getElementById('loginCodeError').classList.remove('show');
+        loginVerified = false;
+        await sendLoginCode();
+    }
+
+    function updateLoginTimer() {
+        const timerEl = document.getElementById('loginCodeTimer');
+        const remaining = Math.max(0, loginCodeExpire - Date.now());
+        const min = Math.floor(remaining / 60000);
+        const sec = Math.floor((remaining % 60000) / 1000);
+        timerEl.textContent = `(${min}:${sec.toString().padStart(2,'0')} 남음)`;
+        if (remaining <= 0) {
+            clearInterval(loginCodeTimer);
+            timerEl.textContent = '(만료됨)';
+            loginVerifiedCode = null;
+        }
+    }
+
+    // 2단계: 코드 확인 후 로그인
+    function handleLoginStep2() {
+        const input = document.getElementById('loginCode').value.trim();
+        const errEl = document.getElementById('loginCodeError');
+        errEl.classList.remove('show');
+
+        if (!loginVerifiedCode || Date.now() > loginCodeExpire) {
+            errEl.textContent = '인증코드가 만료되었습니다. 재발송해주세요.';
+            errEl.classList.add('show');
+            loginVerifiedCode = null;
+            return;
+        }
+        if (input !== loginVerifiedCode) {
+            errEl.textContent = '인증코드가 올바르지 않습니다.';
+            errEl.classList.add('show');
+            return;
+        }
+
+        // 인증 성공 → 로그인
+        document.getElementById('loginCodeSuccess').classList.add('show');
+        clearInterval(loginCodeTimer);
+        setTimeout(() => {
+            currentUser = pendingLoginUser;
+            isAdmin = false;
+            pendingLoginUser = null;
+            loginVerifiedCode = null;
+            resetLoginModal();
+            closeModal('loginModal');
+            enterUserDashboard();
+        }, 700);
+    }
+
+    function backToLoginStep1() {
+        if (loginCodeTimer) clearInterval(loginCodeTimer);
+        loginVerifiedCode = null;
+        pendingLoginUser = null;
+        document.getElementById('loginStep1').style.display = 'block';
+        document.getElementById('loginStep2').style.display = 'none';
+        document.getElementById('loginError').classList.remove('show');
+    }
+
+    function resetLoginModal() {
+        document.getElementById('loginId').value = '';
+        document.getElementById('loginPw').value = '';
+        document.getElementById('loginCode').value = '';
+        document.getElementById('loginStep1').style.display = 'block';
+        document.getElementById('loginStep2').style.display = 'none';
+        document.getElementById('loginError').classList.remove('show');
+        document.getElementById('loginCodeError').classList.remove('show');
+        document.getElementById('loginCodeSuccess').classList.remove('show');
+        document.getElementById('loginSendOk').classList.remove('show');
+        document.getElementById('loginLockMsg').classList.remove('show');
+        if (loginCodeTimer) clearInterval(loginCodeTimer);
+    }
+
+    // ========== 일반 유저 UI ==========
+    function enterUserDashboard() {
+        document.getElementById('mainContainer').style.display = 'block';
+        document.getElementById('adminPanel').style.display = 'none';
+
+        document.getElementById('mainMessage').innerHTML =
+            `👋 안녕하세요 <strong>${currentUser.id}</strong>님!`;
+        document.getElementById('beforeLogin').style.display = 'none';
+        document.getElementById('afterLogin').style.display = 'block';
+
+        // 첫 로그인 시 1000포인트 지급
+        if (!currentUser._gotBonus) {
+            currentUser._gotBonus = true;
+            currentUser.points = (currentUser.points || 0) + 1000;
+            addHistory(currentUser, 'earn', '🎁 가입 보너스', 1000, null);
+            saveData();
+            showToast('🎁 가입 보너스 1000 포인트가 지급됐습니다!', 3000);
+        }
+
+        // 상단 포인트 바
+        document.getElementById('topBar').classList.add('show');
+        document.getElementById('adminPlusBtn').classList.remove('show');
+
+        // 인증 유저면 + 버튼 표시
+        const upBtn = document.getElementById('userUploadBtn');
+        if (currentUser.verified) {
+            upBtn.style.display = 'flex';
+        } else {
+            upBtn.style.display = 'none';
+        }
+        updatePointDisplay();
+    }
+
+    // ========== 관리자 UI ==========
+    function enterAdminPanel() {
+        document.getElementById('mainContainer').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        document.getElementById('topBar').classList.add('show');
+        document.getElementById('adminPlusBtn').classList.add('show');
+        updatePointDisplay();
+        renderAdminUsers();
+        renderAdminServers();
+    }
+
+    function updatePointDisplay() {
+        if (currentUser) {
+            document.getElementById('myPointText').textContent =
+                isAdmin ? '관리자' : (currentUser.points || 0);
+        }
+    }
+
+    // ========== 로그아웃 ==========
+    function handleLogout() {
+        currentUser = null;
+        isAdmin = false;
+        loginFailCount = 0;
+        pendingLoginUser = null;
+        loginVerifiedCode = null;
+        if (loginCodeTimer) clearInterval(loginCodeTimer);
+        document.getElementById('topBar').classList.remove('show');
+        document.getElementById('adminPlusBtn').classList.remove('show');
+        document.getElementById('mainContainer').style.display = 'block';
+        document.getElementById('adminPanel').style.display = 'none';
+        document.getElementById('mainMessage').innerText = '로블록스 개발을 더 쉽게 만들어주는 공간입니다.';
+        document.getElementById('beforeLogin').style.display = 'flex';
+        document.getElementById('afterLogin').style.display = 'none';
+        resetLoginModal();
+        showToast('로그아웃 되었습니다.');
+    }
+
+    // ========== 관리자 액션 ==========
+    function adminGivePoint() {
+        const id = document.getElementById('adminTargetId').value.trim();
+        const errEl = document.getElementById('adminActionError');
+        errEl.classList.remove('show');
+        if (!id) { errEl.textContent = '아이디를 입력해주세요.'; errEl.classList.add('show'); return; }
+        const user = users.find(u => u.id === id);
+        if (!user) { errEl.textContent = '존재하지 않는 유저입니다.'; errEl.classList.add('show'); return; }
+        document.getElementById('adminPointInputArea').style.display = 'block';
+    }
+
+    function adminConfirmPoint() {
+        const id = document.getElementById('adminTargetId').value.trim();
+        const amount = parseInt(document.getElementById('adminPointAmount').value);
+        const errEl = document.getElementById('adminActionError');
+        errEl.classList.remove('show');
+
+        if (!amount || amount < 1) {
+            errEl.textContent = '유효한 포인트를 입력해주세요.';
+            errEl.classList.add('show');
+            return;
+        }
+        const user = users.find(u => u.id === id);
+        if (!user) { errEl.textContent = '유저를 찾을 수 없습니다.'; errEl.classList.add('show'); return; }
+
+        user.points = (user.points || 0) + amount;
+        document.getElementById('adminTargetId').value = '';
+        document.getElementById('adminPointAmount').value = '';
+        document.getElementById('adminPointInputArea').style.display = 'none';
+        closeModal('adminActionModal');
+        renderAdminUsers();
+        saveData();
+        showToast(`${id}님에게 ${amount} 포인트를 지급했습니다. 🪙`);
+
+        // 현재 로그인한 유저라면 포인트 바 업데이트
+        if (currentUser && currentUser.id === id) updatePointDisplay();
+    }
+
+    function adminBanUser() {
+        const id = document.getElementById('adminTargetId').value.trim();
+        const errEl = document.getElementById('adminActionError');
+        errEl.classList.remove('show');
+        if (!id) { errEl.textContent = '아이디를 입력해주세요.'; errEl.classList.add('show'); return; }
+        const user = users.find(u => u.id === id);
+        if (!user) { errEl.textContent = '존재하지 않는 유저입니다.'; errEl.classList.add('show'); return; }
+        if (ADMINS.includes(id)) { errEl.textContent = '관리자는 밴할 수 없습니다.'; errEl.classList.add('show'); return; }
+
+        user.banned = !user.banned;
+        const action = user.banned ? '밴' : '밴 해제';
+        closeModal('adminActionModal');
+        document.getElementById('adminTargetId').value = '';
+        renderAdminUsers();
+        saveData();
+        showToast(`${id}님을 ${action} 처리했습니다.`);
+    }
+
+    function adminVerifyUser() {
+        const id = document.getElementById('adminTargetId').value.trim();
+        const errEl = document.getElementById('adminActionError');
+        errEl.classList.remove('show');
+        if (!id) { errEl.textContent = '아이디를 입력해주세요.'; errEl.classList.add('show'); return; }
+        const user = users.find(u => u.id === id);
+        if (!user) { errEl.textContent = '존재하지 않는 유저입니다.'; errEl.classList.add('show'); return; }
+
+        user.verified = !user.verified;
+        const action = user.verified ? '인증 부여' : '인증 해제';
+        closeModal('adminActionModal');
+        document.getElementById('adminTargetId').value = '';
+        renderAdminUsers();
+        saveData();
+        // 현재 로그인 유저면 + 버튼 업데이트
+        if (currentUser && currentUser.id === id && !isAdmin) {
+            const upBtn = document.getElementById('userUploadBtn');
+            upBtn.style.display = user.verified ? 'flex' : 'none';
+        }
+        showToast(`${id}님 ${action} 완료. ✅`);
+    }
+
+    // 관리자 패널 버튼에서 직접 호출
+    function adminActionFor(id, action) {
+        document.getElementById('adminTargetId').value = id;
+        document.getElementById('adminActionError').classList.remove('show');
+        document.getElementById('adminPointInputArea').style.display = 'none';
+
+        if (action === 'ban') {
+            adminBanUser();
+        } else if (action === 'verify') {
+            adminVerifyUser();
+        } else if (action === 'point') {
+            openModal('adminActionModal');
+            document.getElementById('adminPointInputArea').style.display = 'block';
+        }
+    }
+
+    // ========== 관리자 패널 렌더 ==========
+    function renderAdminUsers() {
+        const el = document.getElementById('adminUserList');
+        if (users.length === 0) {
+            el.innerHTML = '<div class="empty-state">가입된 유저가 없습니다.</div>';
+            return;
+        }
+        el.innerHTML = users.map(u => `
+            <div class="user-row">
+                <div>
+                    <div class="name-part">
+                        ${u.id}
+                        ${u.verified ? '<span class="badge-verified">✅</span>' : ''}
+                        ${u.banned ? '<span class="badge-banned">밴됨</span>' : ''}
+                    </div>
+                    <div class="meta">${u.email} &nbsp;|&nbsp; 🪙 ${u.points || 0} 포인트</div>
+                </div>
+                <div class="actions">
+                    <button class="btn sm" onclick="adminActionFor('${u.id}','point')">🪙 포인트</button>
+                    <button class="btn sm ${u.banned ? 'green' : 'danger'}" onclick="adminActionFor('${u.id}','ban')">${u.banned ? '밴 해제' : '🔨 밴'}</button>
+                    <button class="btn sm ${u.verified ? 'secondary' : 'green'}" onclick="adminActionFor('${u.id}','verify')">${u.verified ? '✅ 해제' : '✅ 인증'}</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderAdminServers() {
+        const el = document.getElementById('adminServerList');
+        if (servers.length === 0) {
+            el.innerHTML = '<div class="empty-state">등록된 서버가 없습니다.</div>';
+            return;
+        }
+        el.innerHTML = servers.map(s => serverCardHTML(s)).join('');
+    }
+
+    // ========== 어드민 탭 전환 ==========
+    function switchAdminTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('adminTabUsers').style.display = tab === 'users' ? 'block' : 'none';
+        document.getElementById('adminTabServers').style.display = tab === 'servers' ? 'block' : 'none';
+        event.target.classList.add('active');
+    }
+
+    // ========== 서버 등록 ==========
+    let pendingImageDataUrl = null;
+
+    function openServerRegister() {
+        if (!currentUser) return;
+        if (currentUser.points < 500) {
+            showToast('서버 등록에는 500 포인트가 필요합니다! 🪙', 3000);
+            return;
+        }
+        const already = servers.find(s => s.ownerId === currentUser.id);
+        if (already) {
+            showToast('계정당 1개의 서버만 등록 가능합니다.', 3000);
+            return;
+        }
+        document.getElementById('srvError').classList.remove('show');
+        document.getElementById('srvDiscord').value = '';
+        document.getElementById('srvDesc').value = '';
+        document.getElementById('srvImage').value = '';
+        document.getElementById('serverImagePreview').style.display = 'none';
+        pendingImageDataUrl = null;
+        openModal('serverRegModal');
+    }
+
+    function previewServerImage(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            pendingImageDataUrl = ev.target.result;
+            const img = document.getElementById('serverImagePreview');
+            img.src = pendingImageDataUrl;
+            img.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function handleServerRegister() {
+        const discord = document.getElementById('srvDiscord').value.trim();
+        const desc = document.getElementById('srvDesc').value.trim();
+        const errEl = document.getElementById('srvError');
+        errEl.classList.remove('show');
+
+        if (!discord || !desc) {
+            errEl.textContent = '디스코드 링크와 서버 소개를 모두 입력해주세요.';
+            errEl.classList.add('show');
+            return;
+        }
+
+        servers.push({
+            ownerId: currentUser.id,
+            discord,
+            desc,
+            imageDataUrl: pendingImageDataUrl,
+            registeredAt: new Date().toLocaleDateString('ko-KR')
+        });
+
+        // 500 포인트 차감
+        currentUser.points -= 500;
+        addHistory(currentUser, 'buy', '서버 등록비', -500, null);
+        updatePointDisplay();
+        saveData();
+
+        closeModal('serverRegModal');
+        showToast('서버가 등록됐습니다! (-500🪙) 🎉');
+        if (isAdmin) renderAdminServers();
+    }
+
+    // ========== 서버 카드 HTML ==========
+    function serverCardHTML(s) {
+        const owner = users.find(u => u.id === s.ownerId) || {};
+        const verifiedBadge = owner.verified ? ' <span style="color:#00c853;">✅</span>' : '';
+        const imgTag = s.imageDataUrl
+            ? `<img src="${s.imageDataUrl}" alt="서버 이미지">`
+            : `<div style="width:70px;height:70px;border-radius:8px;background:#444;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">🖥️</div>`;
+
+        return `
+            <div class="server-card">
+                <div class="server-top">
+                    ${imgTag}
+                    <div class="server-info">
+                        <div class="server-title">
+                            ${s.ownerId}${verifiedBadge}의 서버
+                        </div>
+                        <div class="server-desc">${s.desc}</div>
+                        <div class="server-link"><a href="${s.discord}" target="_blank" rel="noopener">🔗 디스코드 참여하기</a></div>
+                        <div class="server-author">등록일: ${s.registeredAt || '-'}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ========== 서버 둘러보기 ==========
+    // ========== 상점 ==========
+    function openShopUpload() {
+        if (!currentUser) return;
+        if (!currentUser.verified) {
+            showToast('인증된 유저만 물건을 올릴 수 있습니다.', 3000);
+            return;
+        }
+        document.getElementById('itemName').value = '';
+        document.getElementById('itemDesc').value = '';
+        document.getElementById('itemFile').value = '';
+        document.getElementById('itemImage').value = '';
+        document.getElementById('itemImagePreview').style.display = 'none';
+        document.getElementById('itemPrice').value = '';
+        document.getElementById('itemFileLabel').textContent = '';
+        document.getElementById('shopUploadError').classList.remove('show');
+        openModal('shopUploadModal');
+    }
+
+    let pendingItemImageUrl = null;
+    let pendingItemFileUrl = null;
+    let pendingItemFileName = null;
+
+    function previewItemImage(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            pendingItemImageUrl = ev.target.result;
+            const img = document.getElementById('itemImagePreview');
+            img.src = pendingItemImageUrl;
+            img.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const itemFileEl = document.getElementById('itemFile');
+        if (itemFileEl) {
+            itemFileEl.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const allowed = ['.rbxm','.rbxmx','.lua','.rbxl','.rbxlx'];
+                const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+                if (!allowed.includes(ext)) {
+                    document.getElementById('shopUploadError').textContent = '스튜디오 파일(.rbxm, .rbxmx, .lua, .rbxl, .rbxlx)만 올릴 수 있습니다.';
+                    document.getElementById('shopUploadError').classList.add('show');
+                    e.target.value = '';
+                    return;
+                }
+                document.getElementById('shopUploadError').classList.remove('show');
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    pendingItemFileUrl = ev.target.result;
+                    pendingItemFileName = file.name;
+                    document.getElementById('itemFileLabel').textContent = '✅ ' + file.name;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    });
+
+    function handleShopUpload() {
+        const name = document.getElementById('itemName').value.trim();
+        const desc = document.getElementById('itemDesc').value.trim();
+        const price = parseInt(document.getElementById('itemPrice').value);
+        const errEl = document.getElementById('shopUploadError');
+        errEl.classList.remove('show');
+
+        if (!name || !desc) { errEl.textContent = '이름과 소개를 입력해주세요.'; errEl.classList.add('show'); return; }
+        if (!price || price < 1) { errEl.textContent = '유효한 가격을 입력해주세요.'; errEl.classList.add('show'); return; }
+        if (!pendingItemFileUrl) { errEl.textContent = '파일을 올려주세요.'; errEl.classList.add('show'); return; }
+
+        const item = {
+            id: Date.now(),
+            sellerId: currentUser.id,
+            name, desc, price,
+            imageDataUrl: pendingItemImageUrl,
+            fileDataUrl: pendingItemFileUrl,
+            fileName: pendingItemFileName
+        };
+        shopItems.push(item);
+        pendingItemImageUrl = null;
+        pendingItemFileUrl = null;
+        pendingItemFileName = null;
+        saveData();
+        closeModal('shopUploadModal');
+        showToast('물건이 등록됐습니다! 🎉');
+    }
+
+    function renderShopList() {
+        const el = document.getElementById('shopList');
+        if (shopItems.length === 0) { el.innerHTML = '<div class="empty-state">등록된 물건이 없습니다.</div>'; return; }
+        el.innerHTML = '<div class="shop-grid">' + shopItems.map(item => `
+            <div class="shop-card" onclick="openItemDetail(${item.id})">
+                ${item.imageDataUrl
+                    ? `<img src="${item.imageDataUrl}" alt="${item.name}">`
+                    : `<div class="shop-card-no-img">📦</div>`}
+                <div class="shop-card-body">
+                    <div class="shop-card-name">${item.name}</div>
+                    <div class="shop-card-price">🪙 ${item.price.toLocaleString()} 포인트</div>
+                </div>
+            </div>
+        `).join('') + '</div>';
+    }
+
+    function openItemDetail(itemId) {
+        const item = shopItems.find(i => i.id === itemId);
+        if (!item) return;
+        const seller = users.find(u => u.id === item.sellerId) || {};
+        const verBadge = seller.verified ? ' ✅' : '';
+        const myPurchase = purchases.find(p => p.buyerId === currentUser.id && p.itemId === itemId);
+        const isMine = item.sellerId === currentUser.id;
+
+        let actionHTML = '';
+        if (isMine) {
+            actionHTML = `<div style="color:var(--text-sub);font-size:0.9rem;margin-top:10px;">내가 올린 물건입니다.</div>`;
+        } else if (myPurchase) {
+            actionHTML = `
+                <div class="download-box">
+                    <div class="warning">⚠️ 다운로드를 하면 환불을 절대 못한다는 것에 동의된다는 것을 알립니다.</div>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn" onclick="downloadItem(${itemId})" ${myPurchase.downloaded ? 'style="opacity:0.6;"' : ''}>
+                            ⬇️ 다운로드
+                        </button>
+                        ${!myPurchase.downloaded ? `<button class="btn danger" onclick="refundItem(${itemId})">환불</button>` : '<span style="font-size:0.82rem;color:var(--text-sub);align-self:center;">환불 불가 (다운로드 완료)</span>'}
+                    </div>
+                </div>`;
+        } else {
+            actionHTML = `
+                <div class="purchase-confirm-box">
+                    ⚠️ 다운로드를 하면 환불을 절대 못한다는 것에 동의된다는 것을 알립니다.
+                </div>
+                <div style="display:flex;gap:10px;margin-top:8px;">
+                    <button class="btn" style="flex:1;" onclick="buyItem(${itemId})">🪙 구매하기</button>
+                    <button class="btn secondary" onclick="closeModal('itemDetailModal')">취소</button>
+                </div>`;
+        }
+
+        document.getElementById('itemDetailContent').innerHTML = `
+            ${item.imageDataUrl ? `<img src="${item.imageDataUrl}" class="item-detail-img">` : ''}
+            <h2 style="margin:0 0 6px;">${item.name}</h2>
+            <div style="font-size:0.85rem;color:var(--text-sub);margin-bottom:8px;">판매자: ${item.sellerId}${verBadge}</div>
+            <div style="font-size:0.9rem;color:var(--text-sub);margin-bottom:10px;">${item.desc}</div>
+            <div class="item-detail-price">🪙 ${item.price.toLocaleString()} 포인트</div>
+            ${actionHTML}
+        `;
+        openModal('itemDetailModal');
+    }
+
+    function buyItem(itemId) {
+        const item = shopItems.find(i => i.id === itemId);
+        if (!item) return;
+        if (currentUser.points < item.price) {
+            showToast('포인트가 부족합니다! 🪙', 3000);
+            return;
+        }
+        // 포인트 차감
+        currentUser.points -= item.price;
+        addHistory(currentUser, 'buy', `구매: ${item.name}`, -item.price, itemId);
+
+        // 판매자에게 포인트 (다운로드 후)
+        const purchaseId = Date.now();
+        purchases.push({ id: purchaseId, buyerId: currentUser.id, itemId, refunded: false, downloaded: false });
+        updatePointDisplay();
+        saveData();
+        closeModal('itemDetailModal');
+        showToast(`구매 완료! 다운로드 탭에서 받으세요. 🎉`);
+        setTimeout(() => openItemDetail(itemId), 300);
+    }
+
+    function downloadItem(itemId) {
+        const item = shopItems.find(i => i.id === itemId);
+        const purchase = purchases.find(p => p.buyerId === currentUser.id && p.itemId === itemId);
+        if (!item || !purchase) return;
+
+        // 다운로드 처리
+        purchase.downloaded = true;
+
+        // 판매자에게 포인트 지급
+        const seller = users.find(u => u.id === item.sellerId);
+        if (seller) {
+            seller.points = (seller.points || 0) + item.price;
+            addHistory(seller, 'earn', `판매: ${item.name}`, item.price, null);
+            if (currentUser.id === seller.id) updatePointDisplay();
+        }
+        saveData();
+
+        // 실제 파일 다운로드
+        const a = document.createElement('a');
+        a.href = item.fileDataUrl;
+        a.download = item.fileName;
+        a.click();
+
+        closeModal('itemDetailModal');
+        showToast('다운로드 완료! 환불은 불가능합니다.', 3000);
+    }
+
+    function refundItem(itemId) {
+        const item = shopItems.find(i => i.id === itemId);
+        const purchase = purchases.find(p => p.buyerId === currentUser.id && p.itemId === itemId);
+        if (!item || !purchase || purchase.downloaded) return;
+
+        purchase.refunded = true;
+        currentUser.points += item.price;
+        // 내역에서 환불 표시
+        const hist = currentUser.history || [];
+        const buyEntry = hist.find(h => h.type === 'buy' && h.itemId === itemId);
+        if (buyEntry) buyEntry.refunded = true;
+        addHistory(currentUser, 'refund', `환불: ${item.name}`, item.price, itemId);
+
+        // 판매자 포인트는 아직 안 줬으니 그냥 종료
+        purchases = purchases.filter(p => !(p.buyerId === currentUser.id && p.itemId === itemId));
+        updatePointDisplay();
+        saveData();
+        closeModal('itemDetailModal');
+        showToast(`환불 완료! 🪙 ${item.price} 포인트가 돌아왔어요.`);
+    }
+
+    function addHistory(user, type, label, amount, itemId) {
+        if (!user.history) user.history = [];
+        user.history.unshift({ type, label, amount, itemId, date: new Date().toLocaleDateString('ko-KR'), refunded: false });
+    }
+
+    function renderHistory() {
+        if (!currentUser) return;
+        const hist = currentUser.history || [];
+        const el = document.getElementById('historyList');
+        if (hist.length === 0) { el.innerHTML = '<div class="empty-state">내역이 없습니다.</div>'; return; }
+        el.innerHTML = hist.map(h => {
+            const isRefunded = h.refunded && h.type === 'buy';
+            const amtClass = isRefunded ? 'refunded' : (h.amount < 0 ? 'minus' : 'plus');
+            const sign = h.amount > 0 ? '+' : '';
+            return `
+                <div class="history-row">
+                    <div>
+                        <div>${h.label}</div>
+                        <div class="h-label" style="font-size:0.78rem;">${h.date}</div>
+                    </div>
+                    <div class="h-amount ${amtClass}">
+                        🪙 ${sign}${Math.abs(h.amount).toLocaleString()}
+                        ${isRefunded ? '<span class="h-refund-label">환불됨</span>' : ''}
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
+    // ========== 테마 ==========
+    function toggleTheme() {
+        const cur = document.documentElement.getAttribute('data-theme');
+        const btn = document.getElementById('themeToggleBtn');
+        const lbl = document.getElementById('themeLabel');
+        if (cur === 'light') {
+            document.documentElement.removeAttribute('data-theme');
+            lbl.innerText = '현재 모드: 다크모드';
+            btn.innerText = '하얀색으로 변경';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            lbl.innerText = '현재 모드: 라이트모드';
+            btn.innerText = '다크모드로 변경';
+        }
+    }
+</script>
+</body>
+</html>
