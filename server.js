@@ -11,7 +11,7 @@ app.use(cors());
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'widanbang@gmail.com',
+    user: ''orangesho123@gmail.com',
     pass: 'vqezwmlcqxsgsgwb'
   }
 });
@@ -25,7 +25,7 @@ app.post('/send-code', async (req, res) => {
   }
 
   const mailOptions = {
-    from: '"오렌지 샵" <widanbang@gmail.com>',
+    from: '"오렌지 샵" <orangesho123@gmail.com>',
     to: to_email,
     subject: '오렌지 샵 메일 인증 코드',
     html: `
