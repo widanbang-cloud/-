@@ -11,7 +11,7 @@ app.use(cors());
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: ''orangesho123@gmail.com',
+    user: 'orangesho123@gmail.com',
     pass: 'vqezwmlcqxsgsgwb'
   }
 });
@@ -45,10 +45,11 @@ app.post('/send-code', async (req, res) => {
 
   try {
     await transporter.sendMail(mailOptions);
+    console.log(`✅ 이메일 발송 성공: ${to_email}`);
     res.json({ success: true });
   } catch (err) {
-    console.error('이메일 발송 실패:', err);
-    res.status(500).json({ error: '이메일 발송 실패' });
+    console.error('❌ 이메일 발송 실패:', err.message);
+    res.status(500).json({ error: '이메일 발송 실패', detail: err.message });
   }
 });
 
@@ -62,7 +63,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`서버 실행중: 포트 ${PORT}`);
 
-  // 서버 시작 후 5분마다 자기 자신 찌르기 (잠들기 방지)
   setInterval(() => {
     fetch('https://roshop-server.onrender.com')
       .then(() => console.log('서버 깨어있음 ✅'))
